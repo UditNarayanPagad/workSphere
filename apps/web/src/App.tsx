@@ -1,81 +1,20 @@
 import { useEffect, useState, type FormEvent } from "react";
-
-type ApiState = "checking" | "online" | "offline";
-type AuthMode = "login" | "register";
-
-interface User {
-  id: string;
-  email: string;
-  displayName: string;
-}
-
-interface AuthSession {
-  user: User;
-  accessToken: string;
-}
-
-interface Workspace {
-  id: string;
-  name: string;
-  role: "owner" | "admin" | "member";
-  createdAt: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-}
-
-interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "done";
-  assigneeUserId: string | null;
-  dueDate: string | null;
-  createdAt: string;
-}
-
-interface WorkspaceAnalytics {
-  projectCount: number;
-  memberCount: number;
-  taskCount: number;
-  tasksByStatus: { todo: number; inProgress: number; done: number };
-  overdueTaskCount: number;
-}
-
-interface WorkspaceMember {
-  id: string;
-  email: string;
-  displayName: string;
-  role: "owner" | "admin" | "member";
-  joinedAt: string;
-}
-
-interface TaskComment {
-  id: string;
-  body: string;
-  createdAt: string;
-  author: { id: string; displayName: string };
-}
-
-interface NotificationItem {
-  id: string;
-  type: "task_assigned" | "task_commented" | "workspace_joined";
-  message: string;
-  workspaceId: string;
-  resourceId: string;
-  actor: { id: string; displayName: string };
-  readAt: string | null;
-  createdAt: string;
-}
-
-function isTaskStatus(value: string): value is Task["status"] {
-  return value === "todo" || value === "in_progress" || value === "done";
-}
+import AppHeader from "./components/AppHeader";
+import AuthForm from "./components/AuthForm";
+import WelcomeCopy from "./components/WelcomeCopy";
+import WorkspaceDashboard from "./components/WorkspaceDashboard";
+import type {
+  ApiState,
+  AuthMode,
+  AuthSession,
+  NotificationItem,
+  Project,
+  Task,
+  TaskComment,
+  Workspace,
+  WorkspaceAnalytics,
+  WorkspaceMember
+} from "./types";
 
 interface ApiResponse<T> {
   data: T;
@@ -618,59 +557,17 @@ export default function App() {
     setNotice("");
   }
 
-  const statusText = {
-    checking: "Checking API connection",
-    online: "API connected",
-    offline: "API unavailable"
-  }[apiState];
-
   return (
     <main className={session ? "app-shell app-shell--workspace" : "app-shell"}>
-      <header className={session ? "topbar topbar--workspace" : "topbar"}>
-        <a className="brand" href="/" aria-label="WorkSphere home">
-          <span className="brand-mark" aria-hidden="true">W</span>
-          <span>worksphere</span>
-        </a>
-        <div className={`service-status service-status--${apiState}`} role="status">
-          <span className="service-status__dot" />
-          {statusText}
-        </div>
-        {session && (
-          <div className="profile-menu">
-            <div className="profile-menu__avatar" aria-hidden="true">
-              {session.user.displayName.charAt(0).toUpperCase()}
-            </div>
-            <div className="profile-menu__identity">
-              <strong>{session.user.displayName}</strong>
-              <span>{session.user.email}</span>
-            </div>
-            <button
-              className="profile-menu__signout"
-              type="button"
-              onClick={handleLogout}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Signing out…" : "Sign out"}
-            </button>
-          </div>
-        )}
-      </header>
+      <AppHeader
+        apiState={apiState}
+        session={session}
+        isSubmitting={isSubmitting}
+        onLogout={() => void handleLogout()}
+      />
 
       <section className={session ? "page-content page-content--workspace" : "page-content"}>
-        {!session && (
-          <div className="welcome-copy">
-            <p className="eyebrow">TEAMWORK, IN ONE PLACE</p>
-            <h1>Make good work happen.</h1>
-            <p className="intro">
-              Bring your projects, tasks, and team conversations together.
-              Sign in to pick up where your team left off.
-            </p>
-            <div className="feature-note">
-              <span className="feature-note__icon" aria-hidden="true">✦</span>
-              <span>One clear space for everything your team is building.</span>
-            </div>
-          </div>
-        )}
+        {!session && <WelcomeCopy />}
 
         <section
           className={session ? "auth-card auth-card--workspace" : "auth-card"}
@@ -680,436 +577,82 @@ export default function App() {
           {isRestoring ? (
             <div className="auth-loading" role="status">Restoring your session…</div>
           ) : session ? (
-            <div className="signed-in">
-              <div className="workspace-welcome">
-                <div>
-                  <p className="eyebrow">YOUR TEAM SPACE</p>
-                  <h1>Welcome back, {session.user.displayName}.</h1>
-                  <p>Pick up where your team left off.</p>
-                </div>
-              </div>
-              <section className="notification-inbox" aria-label="Notifications">
-                <div className="notification-inbox__heading">
-                  <h3>Notifications</h3>
-                  <div>
-                    <span>{notifications.filter(({ readAt }) => !readAt).length} new</span>
-                    <button type="button" onClick={handleRefreshNotifications}>Refresh</button>
-                  </div>
-                </div>
-                {notifications.length ? (
-                  <ul className="notification-list">
-                    {notifications.slice(0, 5).map((notification) => (
-                      <li
-                        className={notification.readAt ? "notification-item" : "notification-item is-unread"}
-                        key={notification.id}
-                      >
-                        <div>
-                          <p>{notification.message}</p>
-                          <time dateTime={notification.createdAt}>
-                            {new Date(notification.createdAt).toLocaleDateString()}
-                          </time>
-                        </div>
-                        {!notification.readAt && (
-                          <button
-                            type="button"
-                            className="notification-item__read"
-                            onClick={() => handleMarkNotificationRead(notification.id)}
-                          >
-                            Mark read
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="workspace-empty">You’re all caught up.</p>
-                )}
-              </section>
-              <div className="workspace-section">
-                <div className="workspace-section__heading">
-                  <div>
-                    <p className="eyebrow">YOUR TEAM SPACES</p>
-                    <h3>Workspaces</h3>
-                  </div>
-                  <span className="workspace-count">{workspaces.length}</span>
-                </div>
-                {isLoadingWorkspaces ? (
-                  <p className="workspace-empty" role="status">Loading workspaces…</p>
-                ) : workspaces.length ? (
-                  <ul className="workspace-list">
-                    {workspaces.map((workspace) => (
-                      <li className="workspace-item" key={workspace.id}>
-                        <span className="workspace-item__icon" aria-hidden="true">
-                          {workspace.name.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="workspace-item__details">
-                          <strong>{workspace.name}</strong>
-                          <span>{workspace.role}</span>
-                        </span>
-                        <button
-                          className={focusedWorkspaceId === workspace.id
-                            ? "workspace-item__invite is-active"
-                            : "workspace-item__invite"}
-                          type="button"
-                          aria-pressed={focusedWorkspaceId === workspace.id}
-                          disabled={focusedWorkspaceId === workspace.id}
-                          onClick={() => {
-                            setFocusedWorkspaceId(workspace.id);
-                            setSelectedProjectId("");
-                            setActiveTaskId("");
-                          }}
-                        >
-                          Open
-                        </button>
-                        {workspace.role !== "member" && (
-                          <button
-                            className="workspace-item__invite"
-                            type="button"
-                            onClick={() => {
-                              setSelectedWorkspaceId(workspace.id);
-                              setInvitationUrl("");
-                              setErrorMessage("");
-                              setNotice("");
-                            }}
-                          >
-                            Invite
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="workspace-empty">No workspaces yet. Create one to get started.</p>
-                )}
-                {selectedWorkspaceId && (
-                  <form className="workspace-create workspace-invite" onSubmit={handleCreateInvitation}>
-                    <label htmlFor="invitation-email">
-                      Invite to {workspaces.find(({ id }) => id === selectedWorkspaceId)?.name}
-                    </label>
-                    <div className="workspace-create__controls">
-                      <input
-                        id="invitation-email"
-                        type="email"
-                        maxLength={254}
-                        placeholder="teammate@company.com"
-                        value={invitationEmail}
-                        onChange={(event) => setInvitationEmail(event.target.value)}
-                        required
-                      />
-                      <button className="button" type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Creating…" : "Create link"}
-                      </button>
-                    </div>
-                    {invitationUrl && (
-                      <label className="invitation-link">
-                        <span>One-time invitation link</span>
-                        <input
-                          type="url"
-                          aria-label="One-time invitation link"
-                          readOnly
-                          value={invitationUrl}
-                          onFocus={(event) => event.currentTarget.select()}
-                        />
-                      </label>
-                    )}
-                  </form>
-                )}
-                <form className="workspace-create" onSubmit={handleCreateWorkspace}>
-                  <label htmlFor="workspace-name">Create a workspace</label>
-                  <div className="workspace-create__controls">
-                    <input
-                      id="workspace-name"
-                      type="text"
-                      minLength={2}
-                      maxLength={100}
-                      placeholder="e.g. Product team"
-                      value={workspaceName}
-                      onChange={(event) => setWorkspaceName(event.target.value)}
-                      required
-                    />
-                    <button className="button" type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Creating…" : "Create"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-              {focusedWorkspaceId && (
-                <section className="project-board" aria-label="Workspace projects and tasks">
-                  <div className="project-board__heading">
-                    <div>
-                      <p className="eyebrow">WORKSPACE BOARD</p>
-                      <h3>{workspaces.find(({ id }) => id === focusedWorkspaceId)?.name}</h3>
-                    </div>
-                    <button
-                      className="workspace-item__invite"
-                      type="button"
-                      onClick={() => setFocusedWorkspaceId("")}
-                    >
-                      Close
-                    </button>
-                  </div>
-                  {workspaceAnalytics && (
-                    <section className="analytics-grid" aria-label="Workspace overview">
-                      <div><strong>{workspaceAnalytics.projectCount}</strong><span>Projects</span></div>
-                      <div><strong>{workspaceAnalytics.memberCount}</strong><span>Members</span></div>
-                      <div><strong>{workspaceAnalytics.taskCount}</strong><span>Tasks</span></div>
-                      <div className={workspaceAnalytics.overdueTaskCount ? "analytics-stat is-overdue" : "analytics-stat"}>
-                        <strong>{workspaceAnalytics.overdueTaskCount}</strong><span>Overdue</span>
-                      </div>
-                      <p>
-                        To do {workspaceAnalytics.tasksByStatus.todo}
-                        <span aria-hidden="true"> · </span>
-                        In progress {workspaceAnalytics.tasksByStatus.inProgress}
-                        <span aria-hidden="true"> · </span>
-                        Done {workspaceAnalytics.tasksByStatus.done}
-                      </p>
-                    </section>
-                  )}
-                  <form className="workspace-create" onSubmit={handleCreateProject}>
-                    <label htmlFor="project-name">Create a project</label>
-                    <div className="workspace-create__controls">
-                      <input
-                        id="project-name"
-                        type="text"
-                        minLength={2}
-                        maxLength={120}
-                        placeholder="e.g. Website refresh"
-                        value={projectName}
-                        onChange={(event) => setProjectName(event.target.value)}
-                        required
-                      />
-                      <button className="button" type="submit" disabled={isSubmitting}>Add</button>
-                    </div>
-                  </form>
-                  {projects.length > 0 && (
-                    <>
-                      <label className="project-select-label" htmlFor="project-select">Project</label>
-                      <select
-                        id="project-select"
-                        className="project-select"
-                        value={selectedProjectId}
-                        onChange={(event) => {
-                          setSelectedProjectId(event.target.value);
-                          setActiveTaskId("");
-                        }}
-                      >
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>{project.name}</option>
-                        ))}
-                      </select>
-                      <div className="kanban-board">
-                        {(["todo", "in_progress", "done"] as const).map((status) => (
-                          <section className="kanban-column" key={status}>
-                            <h4>{status === "todo" ? "To do" : status === "in_progress" ? "In progress" : "Done"}</h4>
-                            {tasks.filter((task) => task.status === status).map((task) => (
-                              <article className="task-card" key={task.id}>
-                                <span>{task.title}</span>
-                                {task.assigneeUserId && (
-                                  <span className="task-card__meta">
-                                    {workspaceMembers.find(({ id }) => id === task.assigneeUserId)?.displayName ?? "Workspace member"}
-                                  </span>
-                                )}
-                                {task.dueDate && <span className="task-card__meta">Due {task.dueDate}</span>}
-                                <label>
-                                  <span className="visually-hidden">Assignee for {task.title}</span>
-                                  <select
-                                    aria-label={`Assignee for ${task.title}`}
-                                    value={task.assigneeUserId ?? ""}
-                                    onChange={(event) => {
-                                      void handleTaskDetailsChange(task, {
-                                        assigneeUserId: event.target.value || null,
-                                        dueDate: task.dueDate
-                                      });
-                                    }}
-                                  >
-                                    <option value="">Unassigned</option>
-                                    {workspaceMembers.map((member) => (
-                                      <option key={member.id} value={member.id}>{member.displayName}</option>
-                                    ))}
-                                  </select>
-                                </label>
-                                <select
-                                  aria-label={`Move ${task.title}`}
-                                  value={task.status}
-                                  onChange={(event) => {
-                                    if (isTaskStatus(event.target.value)) {
-                                      void handleTaskStatusChange(task, event.target.value);
-                                    }
-                                  }}
-                                >
-                                  <option value="todo">To do</option>
-                                  <option value="in_progress">In progress</option>
-                                  <option value="done">Done</option>
-                                </select>
-                                <button
-                                  className="task-card__comments"
-                                  type="button"
-                                  onClick={() => setActiveTaskId(task.id === activeTaskId ? "" : task.id)}
-                                >
-                                  {task.id === activeTaskId ? "Hide comments" : "Comments"}
-                                </button>
-                              </article>
-                            ))}
-                          </section>
-                        ))}
-                      </div>
-                      {activeTaskId && (
-                        <section className="task-comments" aria-label="Task comments">
-                          <h4>Task conversation</h4>
-                          {taskComments.map((comment) => (
-                            <article className="task-comment" key={comment.id}>
-                              <strong>{comment.author.displayName}</strong>
-                              <p>{comment.body}</p>
-                            </article>
-                          ))}
-                          {!taskComments.length && <p className="workspace-empty">No comments yet.</p>}
-                          <form className="workspace-create" onSubmit={handleCreateComment}>
-                            <label htmlFor="task-comment">Add a comment</label>
-                            <div className="workspace-create__controls">
-                              <input
-                                id="task-comment"
-                                type="text"
-                                minLength={1}
-                                maxLength={2000}
-                                placeholder="Write a message…"
-                                value={commentBody}
-                                onChange={(event) => setCommentBody(event.target.value)}
-                                required
-                              />
-                              <button className="button" type="submit" disabled={isSubmitting}>Post</button>
-                            </div>
-                          </form>
-                        </section>
-                      )}
-                      <form className="workspace-create" onSubmit={handleCreateTask}>
-                        <label htmlFor="task-title">Add a task</label>
-                        <div className="workspace-create__controls">
-                          <input
-                            id="task-title"
-                            type="text"
-                            minLength={2}
-                            maxLength={200}
-                            placeholder="What needs to be done?"
-                            value={taskTitle}
-                            onChange={(event) => setTaskTitle(event.target.value)}
-                            required
-                          />
-                          <button className="button" type="submit" disabled={isSubmitting}>Add</button>
-                        </div>
-                        <label htmlFor="task-assignee">Assignee</label>
-                        <select
-                          id="task-assignee"
-                          className="project-select"
-                          value={taskAssigneeId}
-                          onChange={(event) => setTaskAssigneeId(event.target.value)}
-                        >
-                          <option value="">Unassigned</option>
-                          {workspaceMembers.map((member) => (
-                            <option key={member.id} value={member.id}>{member.displayName}</option>
-                          ))}
-                        </select>
-                        <label htmlFor="task-due-date">Due date</label>
-                        <input
-                          id="task-due-date"
-                          className="project-select"
-                          type="date"
-                          value={taskDueDate}
-                          onChange={(event) => setTaskDueDate(event.target.value)}
-                        />
-                      </form>
-                    </>
-                  )}
-                  {!projects.length && <p className="workspace-empty">Create a project to start a task board.</p>}
-                </section>
-              )}
-              {errorMessage && <p className="form-message form-message--error" role="alert">{errorMessage}</p>}
-              {notice && <p className="form-message form-message--success" role="status">{notice}</p>}
-            </div>
+            <WorkspaceDashboard
+              displayName={session.user.displayName}
+              notificationProps={{
+                notifications,
+                onRefresh: () => void handleRefreshNotifications(),
+                onMarkRead: (notificationId) => void handleMarkNotificationRead(notificationId)
+              }}
+              workspaceProps={{
+                workspaces,
+                isLoadingWorkspaces,
+                focusedWorkspaceId,
+                selectedWorkspaceId,
+                invitationEmail,
+                invitationUrl,
+                workspaceName,
+                isSubmitting,
+                onOpenWorkspace: (workspaceId) => {
+                  setFocusedWorkspaceId(workspaceId);
+                  setSelectedProjectId("");
+                  setActiveTaskId("");
+                },
+                onInviteWorkspace: (workspaceId) => {
+                  setSelectedWorkspaceId(workspaceId);
+                  setInvitationUrl("");
+                  setErrorMessage("");
+                  setNotice("");
+                },
+                onInvitationEmailChange: setInvitationEmail,
+                onCreateInvitation: handleCreateInvitation,
+                onWorkspaceNameChange: setWorkspaceName,
+                onCreateWorkspace: handleCreateWorkspace
+              }}
+              projectBoardProps={focusedWorkspaceId ? {
+                workspaceName: workspaces.find(({ id }) => id === focusedWorkspaceId)?.name,
+                workspaceAnalytics,
+                projects,
+                selectedProjectId,
+                projectName,
+                tasks,
+                workspaceMembers,
+                activeTaskId,
+                taskComments,
+                taskTitle,
+                taskAssigneeId,
+                taskDueDate,
+                commentBody,
+                isSubmitting,
+                onClose: () => setFocusedWorkspaceId(""),
+                onCreateProject: handleCreateProject,
+                onProjectNameChange: setProjectName,
+                onSelectProject: (projectId) => {
+                  setSelectedProjectId(projectId);
+                  setActiveTaskId("");
+                },
+                onCreateTask: handleCreateTask,
+                onTaskTitleChange: setTaskTitle,
+                onTaskAssigneeChange: setTaskAssigneeId,
+                onTaskDueDateChange: setTaskDueDate,
+                onTaskStatusChange: (task, status) => void handleTaskStatusChange(task, status),
+                onTaskDetailsChange: (task, details) => void handleTaskDetailsChange(task, details),
+                onToggleTaskComments: (taskId) => setActiveTaskId(taskId === activeTaskId ? "" : taskId),
+                onCreateComment: handleCreateComment,
+                onCommentBodyChange: setCommentBody
+              } : null}
+              errorMessage={errorMessage}
+              notice={notice}
+            />
           ) : (
-            <>
-              <div className="auth-card__heading">
-                <p className="eyebrow">{authMode === "login" ? "WELCOME BACK" : "GET STARTED"}</p>
-                <h2 id="auth-heading">{authMode === "login" ? "Sign in to WorkSphere" : "Create your account"}</h2>
-                <p>{authMode === "login" ? "Your team is just a moment away." : "Start making good work happen."}</p>
-              </div>
-
-              <div className="auth-tabs" role="tablist" aria-label="Account action">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={authMode === "login"}
-                  className={authMode === "login" ? "auth-tabs__tab is-active" : "auth-tabs__tab"}
-                  onClick={() => changeAuthMode("login")}
-                >
-                  Sign in
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={authMode === "register"}
-                  className={authMode === "register" ? "auth-tabs__tab is-active" : "auth-tabs__tab"}
-                  onClick={() => changeAuthMode("register")}
-                >
-                  Create account
-                </button>
-              </div>
-
-              <form className="auth-form" onSubmit={handleSubmit}>
-                {authMode === "register" && (
-                  <label>
-                    <span>Your name</span>
-                    <input
-                      name="displayName"
-                      type="text"
-                      autoComplete="name"
-                      minLength={2}
-                      maxLength={80}
-                      placeholder="Alex Morgan"
-                      required
-                    />
-                  </label>
-                )}
-                <label>
-                  <span>Email address</span>
-                  <input
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    maxLength={254}
-                    placeholder="you@company.com"
-                    required
-                  />
-                </label>
-                <label>
-                  <span>Password</span>
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete={authMode === "login" ? "current-password" : "new-password"}
-                    minLength={authMode === "register" ? 12 : 1}
-                    maxLength={128}
-                    placeholder={authMode === "register" ? "At least 12 characters" : "Enter your password"}
-                    required
-                  />
-                </label>
-
-                {errorMessage && <p className="form-message form-message--error" role="alert">{errorMessage}</p>}
-                {notice && <p className="form-message form-message--success" role="status">{notice}</p>}
-
-                <button className="button" type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? (authMode === "login" ? "Signing in…" : "Creating account…")
-                    : (authMode === "login" ? "Sign in" : "Create account")}
-                  {!isSubmitting && <span aria-hidden="true">→</span>}
-                </button>
-              </form>
-
-              <p className="auth-card__footnote">
-                {authMode === "login"
-                  ? "Your session is protected with secure, httpOnly cookies."
-                  : "By creating an account, you agree to work better together."}
-              </p>
-            </>
+            <AuthForm
+              authMode={authMode}
+              isSubmitting={isSubmitting}
+              errorMessage={errorMessage}
+              notice={notice}
+              onAuthModeChange={changeAuthMode}
+              onSubmit={handleSubmit}
+            />
           )}
         </section>
       </section>
