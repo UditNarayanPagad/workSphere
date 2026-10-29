@@ -1,0 +1,269 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "WorkSphere final checks",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Temporary stage Windows dev fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"package.json",
+				"package-lock.json",
+				"scripts/dev.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Temporary commit Windows dev fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"Fix Windows development server startup",
+				"-m",
+				"Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Temporary push Windows dev fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Temporary final Windows fix status",
+			"type": "shell",
+			"command": "git status --short --branch",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check WorkSphere MongoDB service",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"ps"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start WorkSphere MongoDB",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"up",
+				"-d",
+				"mongo"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify MongoDB container",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"ps"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check API readiness endpoint",
+			"type": "shell",
+			"command": "Invoke-WebRequest -Uri http://127.0.0.1:4000/api/v1/ready -UseBasicParsing | Select-Object -ExpandProperty Content",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect MongoDB container state",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}",
+				"worksphere-mongo-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check MongoDB service logs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"logs",
+				"--tail",
+				"20",
+				"mongo"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start WorkSphere development servers",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify WorkSphere API readiness",
+			"type": "shell",
+			"command": "Invoke-WebRequest -Uri http://127.0.0.1:4000/api/v1/ready -UseBasicParsing | Select-Object -ExpandProperty Content",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify WorkSphere web page",
+			"type": "shell",
+			"command": "(Invoke-WebRequest -Uri http://127.0.0.1:5173 -UseBasicParsing).StatusCode",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify WorkSphere MongoDB status",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{.State.Status}}",
+				"worksphere-mongo-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage Docker runtime verification",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"PROJECT_STATUS.md"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit Docker runtime verification",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"Record Docker-backed runtime verification",
+				"-m",
+				"Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Push Docker runtime verification",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check final repository sync",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status",
+				"--short",
+				"--branch"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and push workspace dashboard",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"-e",
+				"const {execFileSync}=require('node:child_process'); const run=(args)=>execFileSync('git',args,{stdio:'inherit'}); run(['diff','--check']); run(['add','--','apps/web/src/App.tsx','apps/web/src/styles.css','apps/web/e2e/workspace-flow.spec.ts']); run(['diff','--cached','--check']); run(['commit','-m','Expand signed-in workspace dashboard','-m','Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>']); run(['push','origin','main']);"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage workspace dashboard changes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--",
+				"apps/web/src/App.tsx",
+				"apps/web/src/styles.css",
+				"apps/web/e2e/workspace-flow.spec.ts"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit workspace dashboard changes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"Expand signed-in workspace dashboard",
+				"-m",
+				"Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Push workspace dashboard changes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

@@ -752,6 +752,7 @@ export default function App() {
                             : "workspace-item__invite"}
                           type="button"
                           aria-pressed={focusedWorkspaceId === workspace.id}
+                          disabled={focusedWorkspaceId === workspace.id}
                           onClick={() => {
                             setFocusedWorkspaceId(workspace.id);
                             setSelectedProjectId("");
