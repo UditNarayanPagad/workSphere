@@ -1,6 +1,6 @@
 # WorkSphere
 
-WorkSphere is a team collaboration and project management application built with React, TypeScript, Express, and MongoDB. The foundation and initial authentication API are in place; product features are being added in phases.
+WorkSphere is a team collaboration and project management application built with React, TypeScript, Express, and MongoDB. The MVP includes account authentication, workspace membership and invitations, project/task boards, comments, in-app notifications, and workspace analytics.
 
 ## Requirements
 
@@ -51,6 +51,12 @@ The browser workspace screen lists and creates workspaces, creates invitation li
 
 All project and task routes require workspace membership and verify that the project and task belong to the requested workspace. Assignees must also be workspace members. The browser workspace board supports project creation, adding tasks with assignees and due dates, changing task assignees, moving tasks across the three Kanban columns, and posting task comments.
 
+## Workspace analytics
+
+- `GET /api/v1/workspaces/:workspaceId/analytics` — returns project and member totals, task counts by status, total tasks, and overdue tasks. Access is limited to workspace members.
+
+The workspace board shows these summary metrics. Overdue means a task has a due date before the current UTC calendar day and is not marked done.
+
 ## Notifications API
 
 - `GET /api/v1/notifications` — returns the authenticated user's 50 most recent notifications.
@@ -62,7 +68,7 @@ Notifications are generated for task assignments, comments on an assigned task, 
 
 - `npm run lint` — ESLint for both workspaces
 - `npm run typecheck` — TypeScript checks for client, API, and API tests
-- `npm test` — API authentication tests using an isolated in-memory MongoDB
+- `npm test` — API integration tests using an isolated in-memory MongoDB
 - `npm run build` — production builds
 - `npm run check` — lint, typecheck, tests, and build
 
@@ -73,13 +79,16 @@ Notifications are generated for task assignments, comments on an assigned task, 
 - [x] MongoDB connection and liveness/readiness endpoints
 - [x] Local MongoDB Compose configuration and CI validation workflow
 - [x] Registration, login, refresh rotation, logout, and authenticated current-user API
-- [x] Authentication API tests covering validation, duplicate users, invalid credentials, origin restrictions, refresh replay, logout, and protected profile access
+- [x] API integration tests covering authentication, workspaces, invitations, projects, tasks, comments, notifications, and analytics (18 tests)
 - [x] Browser sign-in and account creation UI with refresh-cookie session restoration and in-memory access tokens
 - [x] Workspace creation/listing, owner memberships, and member-only directory access
 - [x] Expiring, single-use workspace invitations, acceptance, and revocation
 - [x] Workspace-scoped projects, tasks, and Kanban status changes
 - [x] In-app notifications for task and workspace events
-- [ ] Analytics; frontend and end-to-end tests
+- [x] Workspace analytics
+- [ ] Browser end-to-end tests
+
+The full `npm run check` command currently passes linting, API and web typechecks, all 18 API integration tests, and production builds. Persistent MongoDB/API startup and browser end-to-end testing still need verification in an environment with Docker or a MongoDB URI and browser test tooling.
 
 ## Configuration
 

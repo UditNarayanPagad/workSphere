@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { listNotifications, markNotificationRead } from "../services/notification-service.js";
+import { routeParam } from "../utils/route-param.js";
 
 export const listNotificationsController: RequestHandler = async (_request, response) => {
   const notifications = await listNotifications(response.locals.authUserId ?? "");
@@ -9,7 +10,7 @@ export const listNotificationsController: RequestHandler = async (_request, resp
 export const markNotificationReadController: RequestHandler = async (request, response) => {
   await markNotificationRead(
     response.locals.authUserId ?? "",
-    request.params.notificationId ?? ""
+    routeParam(request.params.notificationId)
   );
   response.status(204).end();
 };

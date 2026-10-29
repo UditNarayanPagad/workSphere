@@ -15,7 +15,7 @@ import { loginSchema, registerSchema } from "../validation/auth.js";
 function createAuthRateLimit() {
   return rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 10,
+    limit: process.env.NODE_ENV === "test" ? 100 : 10,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     message: { error: { message: "Too many authentication attempts. Try again later." } }

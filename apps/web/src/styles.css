@@ -372,6 +372,13 @@ h1 {
 .project-board__heading { display: flex; align-items: center; justify-content: space-between; }
 .project-board__heading .eyebrow { margin-bottom: 0.35rem; font-size: 0.61rem; }
 .project-board__heading h3 { margin: 0; color: #28334a; font-size: 0.95rem; }
+.analytics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.45rem; }
+.analytics-grid > div { display: grid; gap: 0.2rem; padding: 0.55rem; border-radius: 0.5rem; background: #f0f3ff; }
+.analytics-grid strong { color: #3e50b0; font-size: 1.05rem; }
+.analytics-grid span { color: #778198; font-size: 0.62rem; }
+.analytics-grid .is-overdue { background: #fff0f1; }
+.analytics-grid .is-overdue strong { color: #bc5260; }
+.analytics-grid > p { grid-column: 1 / -1; margin: 0.15rem 0 0; color: #778198; font-size: 0.65rem; }
 .project-select-label { color: #505b70; font-size: 0.73rem; font-weight: 650; }
 .project-select {
   width: 100%;

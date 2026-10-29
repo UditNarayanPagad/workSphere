@@ -8,6 +8,7 @@ import {
   listWorkspaces,
   revokeWorkspaceInvitation
 } from "../services/workspace-service.js";
+import { routeParam } from "../utils/route-param.js";
 
 export const createWorkspaceController: RequestHandler = async (request, response) => {
   const workspace = await createWorkspace(response.locals.authUserId ?? "", request.body);
@@ -22,7 +23,7 @@ export const listWorkspacesController: RequestHandler = async (_request, respons
 export const listWorkspaceMembersController: RequestHandler = async (request, response) => {
   const members = await listWorkspaceMembers(
     response.locals.authUserId ?? "",
-    request.params.workspaceId ?? ""
+    routeParam(request.params.workspaceId)
   );
   response.status(200).json({ data: { members } });
 };
@@ -30,7 +31,7 @@ export const listWorkspaceMembersController: RequestHandler = async (request, re
 export const createWorkspaceInvitationController: RequestHandler = async (request, response) => {
   const invitation = await createWorkspaceInvitation(
     response.locals.authUserId ?? "",
-    request.params.workspaceId ?? "",
+    routeParam(request.params.workspaceId),
     request.body
   );
   response.status(201).json({ data: { invitation } });
@@ -39,7 +40,7 @@ export const createWorkspaceInvitationController: RequestHandler = async (reques
 export const listWorkspaceInvitationsController: RequestHandler = async (request, response) => {
   const invitations = await listWorkspaceInvitations(
     response.locals.authUserId ?? "",
-    request.params.workspaceId ?? ""
+    routeParam(request.params.workspaceId)
   );
   response.status(200).json({ data: { invitations } });
 };
@@ -47,8 +48,8 @@ export const listWorkspaceInvitationsController: RequestHandler = async (request
 export const revokeWorkspaceInvitationController: RequestHandler = async (request, response) => {
   await revokeWorkspaceInvitation(
     response.locals.authUserId ?? "",
-    request.params.workspaceId ?? "",
-    request.params.invitationId ?? ""
+    routeParam(request.params.workspaceId),
+    routeParam(request.params.invitationId)
   );
   response.status(204).end();
 };

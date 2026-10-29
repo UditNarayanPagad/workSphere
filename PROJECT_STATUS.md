@@ -1,6 +1,6 @@
 # WorkSphere project status
 
-## Current phase: Authentication and authorization
+## Current phase: MVP validation and deployment
 
 ### Completed
 
@@ -20,22 +20,23 @@
 - [x] Added workspace-scoped projects, tasks, status updates, cross-workspace authorization checks, and a basic Kanban board in the browser UI.
 - [x] Added workspace-member task assignment, due dates, task comments, and task conversation UI.
 - [x] Added in-app notifications for task assignment/comments and workspace joins, with a recipient-only inbox and read state.
+- [x] Added member-only workspace analytics for projects, members, task states, and overdue tasks.
 
 ### Validation
 
 - Workspace diagnostics: no editor problems reported.
 - Dependencies installed and `package-lock.json` generated.
-- `npm run check`: passed (API/client lint, source and test typechecks, 7 API authentication tests, and production builds).
+- `npm run check`: passed (API/client lint, source and test typechecks, all 18 API tests, and production builds).
 - Authentication tests: 7 passed against an isolated in-memory MongoDB instance, including invalid/unknown credentials, refresh replay, logout cookie clearing, and origin checks.
+- Workspace API tests: 11 passed against an isolated in-memory MongoDB instance, covering workspace access, invitations, projects, tasks, comments, notifications, and analytics.
 - `npm audit`: passed with zero reported vulnerabilities after updating Vitest to a patched major release.
 - MongoDB/API runtime check: blocked because Docker Desktop is not running; `docker compose up -d mongo` could not connect to the Docker engine.
-- Workspace, invitation, project, task, comment, and notification changes are not yet test-run: VS Code test discovery did not match the Vitest tests, and the available shell is missing both PowerShell and `cmd.exe`, so repository checks could not be started. Editor diagnostics report no problems in the changed files.
 
 ### Known limitations
 
 - Persistent local MongoDB and API process startup/readiness remain unverified until Docker Desktop or a MongoDB URI is available.
-- Email invitation delivery, browser push/real-time notifications, task editing beyond status/assignment/due date, analytics, and end-to-end tests remain unimplemented.
+- Email invitation delivery, browser push/real-time notifications, task editing beyond status/assignment/due date, and end-to-end tests remain unimplemented.
 
 ### Next milestone
 
-Run workspace checks for workspace, invitation, project, task, comment, and notification APIs, verify API startup against persistent MongoDB, then add analytics and end-to-end tests.
+Verify API startup against persistent MongoDB and add browser end-to-end coverage. The app's core workspace workflows have automated API test coverage; email delivery and real-time notifications remain optional follow-up features.

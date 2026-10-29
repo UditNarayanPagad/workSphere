@@ -18,6 +18,7 @@ import {
   listWorkspacesController,
   revokeWorkspaceInvitationController
 } from "../controllers/workspace-controller.js";
+import { workspaceAnalyticsController } from "../controllers/workspace-analytics-controller.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import { validateBody } from "../middleware/validate-body.js";
 import {
@@ -41,6 +42,7 @@ workspacesRouter.post(
   validateBody(acceptWorkspaceInvitationSchema),
   acceptWorkspaceInvitationController
 );
+workspacesRouter.get("/:workspaceId/analytics", workspaceAnalyticsController);
 workspacesRouter.get("/:workspaceId/projects", listProjectsController);
 workspacesRouter.post(
   "/:workspaceId/projects",

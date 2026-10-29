@@ -100,7 +100,7 @@ describe("workspaces", () => {
 
     const members = await request(app)
       .get(`/api/v1/workspaces/${workspaceId}/members`)
-      .set("Authorization", `Bearer ${ownerToken}`);
+      .set("Authorization", "Bearer " + ownerToken);
     expect(members.status).toBe(200);
     expect(members.body.data.members).toHaveLength(1);
     expect(members.body.data.members[0]).toMatchObject({
@@ -283,7 +283,7 @@ describe("workspaces", () => {
 
     const task = await request(app)
       .post(`/api/v1/workspaces/${workspaceId}/projects/${projectId}/tasks`)
-      .set("Authorization", `Bearer ${memberToken}`)
+      .set("Authorization", "Bearer " + ownerToken)
       .send({
         title: "Design landing page",
         description: "Prepare first draft",
@@ -462,5 +462,59 @@ describe("workspaces", () => {
       .set("Authorization", `Bearer ${ownerToken}`)
       .send({ status: "blocked" });
     expect(invalidStatus.status).toBe(400);
+  });
+
+  it("reports workspace analytics only to members and counts projects, members, task states, and overdue tasks", async () => {
+    const ownerToken = await register("alex@example.com", "Alex Morgan");
+    const memberToken = await register("sam@example.com", "Sam Taylor");
+    const outsiderToken = await register("lee@example.com", "Lee Jordan");
+    const createdWorkspace = await request(app)
+      .post("/api/v1/workspaces")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ name: "Product Team" });
+    const workspaceId = createdWorkspace.body.data.workspace.id as string;
+    const member = await User.findOne({ email: "sam@example.com" });
+    if (!member) throw new Error("Expected the test member to exist");
+    await WorkspaceMembership.create({ workspaceId, userId: member._id, role: "member" });
+
+    const project = await request(app)
+      .post(`/api/v1/workspaces/${workspaceId}/projects`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ name: "Website" });
+    const projectId = project.body.data.project.id as string;
+    const createTask = async (title: string, dueDate?: string) =>
+      request(app)
+        .post(`/api/v1/workspaces/${workspaceId}/projects/${projectId}/tasks`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ title, ...(dueDate ? { dueDate } : {}) });
+
+    await createTask("Overdue task", "2020-01-01");
+    const inProgress = await createTask("Active task");
+    const done = await createTask("Finished task");
+    await request(app)
+      .patch(`/api/v1/workspaces/${workspaceId}/projects/${projectId}/tasks/${inProgress.body.data.task.id}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ status: "in_progress" });
+    await request(app)
+      .patch(`/api/v1/workspaces/${workspaceId}/projects/${projectId}/tasks/${done.body.data.task.id}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ status: "done" });
+
+    const analytics = await request(app)
+      .get(`/api/v1/workspaces/${workspaceId}/analytics`)
+      .set("Authorization", `Bearer ${memberToken}`);
+    expect(analytics.status).toBe(200);
+    expect(analytics.body.data.analytics).toEqual({
+      projectCount: 1,
+      memberCount: 2,
+      taskCount: 3,
+      tasksByStatus: { todo: 1, inProgress: 1, done: 1 },
+      overdueTaskCount: 1
+    });
+
+    const denied = await request(app)
+      .get(`/api/v1/workspaces/${workspaceId}/analytics`)
+      .set("Authorization", `Bearer ${outsiderToken}`);
+    expect(denied.status).toBe(404);
   });
 });

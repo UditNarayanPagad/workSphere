@@ -39,6 +39,14 @@ interface Task {
   createdAt: string;
 }
 
+interface WorkspaceAnalytics {
+  projectCount: number;
+  memberCount: number;
+  taskCount: number;
+  tasksByStatus: { todo: number; inProgress: number; done: number };
+  overdueTaskCount: number;
+}
+
 interface WorkspaceMember {
   id: string;
   email: string;
@@ -127,6 +135,7 @@ export default function App() {
   const [focusedWorkspaceId, setFocusedWorkspaceId] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>([]);
+  const [workspaceAnalytics, setWorkspaceAnalytics] = useState<WorkspaceAnalytics | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState("");
@@ -189,11 +198,12 @@ export default function App() {
 
     let active = true;
     setIsLoadingWorkspaces(true);
+    const activeSession = session;
     async function loadWorkspacesAndAcceptInvite() {
       try {
         const response = await requestApi<{ workspaces: Workspace[] }>("workspaces", {
           method: "GET",
-          accessToken: session.accessToken
+          accessToken: activeSession.accessToken
         });
         if (active && response) setWorkspaces(response.data.workspaces);
 
@@ -202,7 +212,7 @@ export default function App() {
 
         const accepted = await requestApi<{ workspace: Workspace }>("workspaces/invitations/accept", {
           method: "POST",
-          accessToken: session.accessToken,
+          accessToken: activeSession.accessToken,
           body: { token }
         });
         if (active && accepted) {
@@ -258,6 +268,7 @@ export default function App() {
     if (!session || !focusedWorkspaceId) {
       setProjects([]);
       setWorkspaceMembers([]);
+      setWorkspaceAnalytics(null);
       setSelectedProjectId("");
       setTasks([]);
       setActiveTaskId("");
@@ -290,6 +301,29 @@ export default function App() {
       active = false;
     };
   }, [session, focusedWorkspaceId]);
+
+  useEffect(() => {
+    if (!session || !focusedWorkspaceId) {
+      setWorkspaceAnalytics(null);
+      return;
+    }
+
+    let active = true;
+    requestApi<{ analytics: WorkspaceAnalytics }>(
+      `workspaces/${focusedWorkspaceId}/analytics`,
+      { method: "GET", accessToken: session.accessToken }
+    )
+      .then((response) => {
+        if (active && response) setWorkspaceAnalytics(response.data.analytics);
+      })
+      .catch((error: unknown) => {
+        if (active) setErrorMessage(error instanceof Error ? error.message : "Could not load workspace analytics.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [session, focusedWorkspaceId, projects, tasks]);
 
   useEffect(() => {
     if (!session || !focusedWorkspaceId || !selectedProjectId) {
@@ -784,6 +818,23 @@ export default function App() {
                       Close
                     </button>
                   </div>
+                  {workspaceAnalytics && (
+                    <section className="analytics-grid" aria-label="Workspace overview">
+                      <div><strong>{workspaceAnalytics.projectCount}</strong><span>Projects</span></div>
+                      <div><strong>{workspaceAnalytics.memberCount}</strong><span>Members</span></div>
+                      <div><strong>{workspaceAnalytics.taskCount}</strong><span>Tasks</span></div>
+                      <div className={workspaceAnalytics.overdueTaskCount ? "analytics-stat is-overdue" : "analytics-stat"}>
+                        <strong>{workspaceAnalytics.overdueTaskCount}</strong><span>Overdue</span>
+                      </div>
+                      <p>
+                        To do {workspaceAnalytics.tasksByStatus.todo}
+                        <span aria-hidden="true"> · </span>
+                        In progress {workspaceAnalytics.tasksByStatus.inProgress}
+                        <span aria-hidden="true"> · </span>
+                        Done {workspaceAnalytics.tasksByStatus.done}
+                      </p>
+                    </section>
+                  )}
                   <form className="workspace-create" onSubmit={handleCreateProject}>
                     <label htmlFor="project-name">Create a project</label>
                     <div className="workspace-create__controls">
