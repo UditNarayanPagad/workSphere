@@ -9,7 +9,9 @@ test("registers an account and manages a workspace task through the browser", as
   await page.getByLabel("Password").fill("a-secure-e2e-password");
   await page.getByRole("button", { name: "Create account" }).last().click();
 
-  await expect(page.getByRole("heading", { name: "Welcome, E2E Owner." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome back, E2E Owner." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByText("TEAMWORK, IN ONE PLACE")).toHaveCount(0);
   await expect(page.getByRole("status").filter({ hasText: "API connected" })).toBeVisible();
 
   await page.getByLabel("Create a workspace").fill("E2E Product Team");

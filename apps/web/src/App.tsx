@@ -625,8 +625,8 @@ export default function App() {
   }[apiState];
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
+    <main className={session ? "app-shell app-shell--workspace" : "app-shell"}>
+      <header className={session ? "topbar topbar--workspace" : "topbar"}>
         <a className="brand" href="/" aria-label="WorkSphere home">
           <span className="brand-mark" aria-hidden="true">W</span>
           <span>worksphere</span>
@@ -635,33 +635,59 @@ export default function App() {
           <span className="service-status__dot" />
           {statusText}
         </div>
+        {session && (
+          <div className="profile-menu">
+            <div className="profile-menu__avatar" aria-hidden="true">
+              {session.user.displayName.charAt(0).toUpperCase()}
+            </div>
+            <div className="profile-menu__identity">
+              <strong>{session.user.displayName}</strong>
+              <span>{session.user.email}</span>
+            </div>
+            <button
+              className="profile-menu__signout"
+              type="button"
+              onClick={handleLogout}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Signing out…" : "Sign out"}
+            </button>
+          </div>
+        )}
       </header>
 
-      <section className="page-content">
-        <div className="welcome-copy">
-          <p className="eyebrow">TEAMWORK, IN ONE PLACE</p>
-          <h1>Make good work happen.</h1>
-          <p className="intro">
-            Bring your projects, tasks, and team conversations together.
-            Sign in to pick up where your team left off.
-          </p>
-          <div className="feature-note">
-            <span className="feature-note__icon" aria-hidden="true">✦</span>
-            <span>One clear space for everything your team is building.</span>
+      <section className={session ? "page-content page-content--workspace" : "page-content"}>
+        {!session && (
+          <div className="welcome-copy">
+            <p className="eyebrow">TEAMWORK, IN ONE PLACE</p>
+            <h1>Make good work happen.</h1>
+            <p className="intro">
+              Bring your projects, tasks, and team conversations together.
+              Sign in to pick up where your team left off.
+            </p>
+            <div className="feature-note">
+              <span className="feature-note__icon" aria-hidden="true">✦</span>
+              <span>One clear space for everything your team is building.</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        <section className="auth-card" aria-labelledby="auth-heading">
+        <section
+          className={session ? "auth-card auth-card--workspace" : "auth-card"}
+          aria-label={session ? "Workspace dashboard" : undefined}
+          aria-labelledby={session ? undefined : "auth-heading"}
+        >
           {isRestoring ? (
             <div className="auth-loading" role="status">Restoring your session…</div>
           ) : session ? (
             <div className="signed-in">
-              <div className="signed-in__avatar" aria-hidden="true">
-                {session.user.displayName.charAt(0).toUpperCase()}
+              <div className="workspace-welcome">
+                <div>
+                  <p className="eyebrow">YOUR TEAM SPACE</p>
+                  <h1>Welcome back, {session.user.displayName}.</h1>
+                  <p>Pick up where your team left off.</p>
+                </div>
               </div>
-              <p className="eyebrow">YOU’RE SIGNED IN</p>
-              <h2 id="auth-heading">Welcome, {session.user.displayName}.</h2>
-              <p className="signed-in__email">{session.user.email}</p>
               <section className="notification-inbox" aria-label="Notifications">
                 <div className="notification-inbox__heading">
                   <h3>Notifications</h3>
@@ -721,8 +747,11 @@ export default function App() {
                           <span>{workspace.role}</span>
                         </span>
                         <button
-                          className="workspace-item__invite"
+                          className={focusedWorkspaceId === workspace.id
+                            ? "workspace-item__invite is-active"
+                            : "workspace-item__invite"}
                           type="button"
+                          aria-pressed={focusedWorkspaceId === workspace.id}
                           onClick={() => {
                             setFocusedWorkspaceId(workspace.id);
                             setSelectedProjectId("");
@@ -994,9 +1023,6 @@ export default function App() {
               )}
               {errorMessage && <p className="form-message form-message--error" role="alert">{errorMessage}</p>}
               {notice && <p className="form-message form-message--success" role="status">{notice}</p>}
-              <button className="button button--secondary" type="button" onClick={handleLogout} disabled={isSubmitting}>
-                {isSubmitting ? "Please wait…" : "Sign out"}
-              </button>
             </div>
           ) : (
             <>
