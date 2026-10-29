@@ -67,10 +67,11 @@ Notifications are generated for task assignments, comments on an assigned task, 
 ## Checks
 
 - `npm run lint` — ESLint for both workspaces
-- `npm run typecheck` — TypeScript checks for client, API, and API tests
+- `npm run typecheck` — TypeScript checks for client, API, API tests, and browser tests
 - `npm test` — API integration tests using an isolated in-memory MongoDB
+- `npm run test:e2e` — Chromium browser workflow against the API and an isolated in-memory MongoDB
 - `npm run build` — production builds
-- `npm run check` — lint, typecheck, tests, and build
+- `npm run check` — lint, typecheck, API tests, browser E2E, and build
 
 ## Current status
 
@@ -86,9 +87,9 @@ Notifications are generated for task assignments, comments on an assigned task, 
 - [x] Workspace-scoped projects, tasks, and Kanban status changes
 - [x] In-app notifications for task and workspace events
 - [x] Workspace analytics
-- [ ] Browser end-to-end tests
+- [x] Browser end-to-end test for registration, workspace/project/task creation, task status updates, and comments
 
-The full `npm run check` command currently passes linting, API and web typechecks, all 18 API integration tests, and production builds. Persistent MongoDB/API startup and browser end-to-end testing still need verification in an environment with Docker or a MongoDB URI and browser test tooling.
+The full `npm run check` command passes linting, API/web/E2E typechecks, all 18 API integration tests, the Chromium browser workflow, and production builds. The E2E workflow uses an isolated in-memory MongoDB. Persistent MongoDB/API startup still needs verification in an environment with Docker or a MongoDB URI.
 
 ## Configuration
 

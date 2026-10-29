@@ -26,17 +26,19 @@
 
 - Workspace diagnostics: no editor problems reported.
 - Dependencies installed and `package-lock.json` generated.
-- `npm run check`: passed (API/client lint, source and test typechecks, all 18 API tests, and production builds).
+- `npm run check`: passed (API/client lint, source/API/E2E typechecks, 18 API tests, one Chromium E2E scenario, and production builds).
 - Authentication tests: 7 passed against an isolated in-memory MongoDB instance, including invalid/unknown credentials, refresh replay, logout cookie clearing, and origin checks.
 - Workspace API tests: 11 passed against an isolated in-memory MongoDB instance, covering workspace access, invitations, projects, tasks, comments, notifications, and analytics.
+- Chromium E2E: passed against an isolated in-memory MongoDB; verified account registration, workspace and project creation, task creation/status update, and task comments.
 - `npm audit`: passed with zero reported vulnerabilities after updating Vitest to a patched major release.
-- MongoDB/API runtime check: blocked because Docker Desktop is not running; `docker compose up -d mongo` could not connect to the Docker engine.
+- `npm run check` now includes the browser E2E test and typechecks its sources.
+- Persistent MongoDB/API runtime check: blocked because Docker Desktop is not running; `docker compose ps` could not connect to the Docker engine.
 
 ### Known limitations
 
-- Persistent local MongoDB and API process startup/readiness remain unverified until Docker Desktop or a MongoDB URI is available.
-- Email invitation delivery, browser push/real-time notifications, task editing beyond status/assignment/due date, and end-to-end tests remain unimplemented.
+- Persistent local MongoDB startup/readiness remain unverified until Docker Desktop or a MongoDB URI is available.
+- Email invitation delivery, browser push/real-time notifications, and task editing beyond status/assignment/due date remain unimplemented.
 
 ### Next milestone
 
-Verify API startup against persistent MongoDB and add browser end-to-end coverage. The app's core workspace workflows have automated API test coverage; email delivery and real-time notifications remain optional follow-up features.
+Verify API startup against persistent MongoDB. The MVP workflows now have API integration and browser E2E coverage; email delivery and real-time notifications remain optional follow-up features.
