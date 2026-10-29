@@ -32,13 +32,12 @@
 - Chromium E2E: passed against an isolated in-memory MongoDB; verified account registration, workspace and project creation, task creation/status update, and task comments.
 - `npm audit`: passed with zero reported vulnerabilities after updating Vitest to a patched major release.
 - `npm run check` now includes the browser E2E test and typechecks its sources.
-- Persistent MongoDB/API runtime check: blocked because Docker Desktop is not running; `docker compose ps` could not connect to the Docker engine.
+- Persistent MongoDB/API runtime: verified with Docker Desktop; the MongoDB container started, the API reported `{"status":"ready","service":"api","dependencies":{"database":"connected"}}`, and the web app returned HTTP 200.
 
 ### Known limitations
 
-- Persistent local MongoDB startup/readiness remain unverified until Docker Desktop or a MongoDB URI is available.
 - Email invitation delivery, browser push/real-time notifications, and task editing beyond status/assignment/due date remain unimplemented.
 
 ### Next milestone
 
-Verify API startup against persistent MongoDB. The MVP workflows now have API integration and browser E2E coverage; email delivery and real-time notifications remain optional follow-up features.
+The MVP workflows now have API integration and browser E2E coverage, and the local Docker-backed MongoDB/API startup has been verified. Email delivery and real-time notifications remain optional follow-up features.
